@@ -58,7 +58,6 @@ def detect_programming_language(file_path: str) -> str:
         '.c': 'C',
         '.cpp': 'C++',
         '.cs': 'C#',
-        '.csproj': 'C#',
         '.rb': 'Ruby',
         '.go': 'Go',
         '.php': 'PHP',
@@ -197,6 +196,9 @@ def calculate_final_score(scores: List[int]) -> int:
     """
     Calculate the final score based on the list of scores.
     """
+    # if length of scores is 0, return 10
+    if len(scores) == 0:
+        return 10
     return sum(scores) / len(scores)
 
 def print_review_details(file_path: str, language: str, review: CodeReview):
