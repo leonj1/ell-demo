@@ -19,6 +19,11 @@ class CodeReview(BaseModel):
     make_it_more_readable: str = Field(description="If there are ways to make the code more readable. If there is no way to make it more readable, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
     make_it_more_testable: str = Field(description="If there are ways to make the code more testable. If there is no way to make it more testable, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
 
+class TestFileReview(BaseModel):
+    is_test_file: bool = Field(description="Whether the file is a test file")
+    review_score: int = Field(description="The test file review score of the contents")
+    are_there_missing_test_scenarios: str = Field(description="List any missing test scenarios. If there are no missing test scenarios, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
+
 def parse_gitlab_mr_url(url: str) -> Tuple[str, int, int]:
     """
     Parse a GitLab merge request URL to extract the project path, project ID, and merge request IID.
@@ -191,6 +196,17 @@ Given the contents, you need to return a structured review.
         ell.user(f"Analyze the following changes and provide feedback: {contents}.")
     ]
 
+@ell.complex(model="gpt-4o-2024-08-06", response_format=TestFileReview)
+def is_test_file(language:str, contents: str):
+    """You are a movie review generator. Given the name of a movie, you need to return a structured review."""
+    return [
+        ell.system(f"""
+You are a software developer. You are given the name of a programming language and 
+the contents of a file. You need to determine if the file is a test file.
+"""),
+        ell.user(f"Analyze the following changes and provide feedback. Language: {language}, Contents: {contents}.")
+    ]
+
 # create a function that will accept a list of code review scores and return a single score
 def calculate_final_score(scores: List[int]) -> int:
     """
@@ -272,7 +288,15 @@ def main():
                         print(f"Error: File {file_path} not found in merge request changes.")
                         continue
 
-                    # concatenate common coding standards with language specific coding standards
+
+                    review_message = is_test_file(language, contents)
+                    review = review_message.parsed
+                    if review.is_test_file:
+                        if review.are_there_missing_test_scenarios:
+                            print(f"  - {file_path} (Language: {language})")
+                            print(f"    Code review score: {review.review_score}/10")
+                            print(f"    Missing test scenarios: {review.are_there_missing_test_scenarios}")
+
                     coding_standards = common_coding_standards + read_coding_standards(language, coding_standards_by_language)
                     review_message = code_reviewer(coding_standards, contents)
                     review = review_message.parsed
