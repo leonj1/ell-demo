@@ -27,31 +27,6 @@ class TestFileReview(BaseModel):
     review_score: int = Field(description="The test file review score of the contents")
     are_there_missing_test_scenarios: str = Field(description="List any missing test scenarios. If there are no missing test scenarios, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
 
-def parse_gitlab_mr_url(url: str) -> Tuple[str, int, int]:
-    """
-    Parse a GitLab merge request URL to extract the project path, project ID, and merge request IID.
-    """
-    parsed_url = urlparse(url)
-    path_parts = parsed_url.path.strip('/').split('/')
-    
-    if len(path_parts) < 5 or path_parts[-2] != 'merge_requests':
-        raise ValueError("Invalid GitLab merge request URL")
-    
-    project_path = '/'.join(path_parts[:-3])
-    mr_iid = int(path_parts[-1])
-    
-    return parsed_url.netloc, project_path, mr_iid
-
-def checkout_merge_request(gl: gitlab.Gitlab, project_path: str, mr_iid: int) -> List[str]:
-    """
-    Checkout a merge request from GitLab and return a list of changed files.
-    """
-    project = gl.projects.get(project_path)
-    mr = project.mergerequests.get(mr_iid)
-    
-    changes = mr.changes()['changes']
-    return [change['new_path'] for change in changes]
-
 def detect_programming_language(file_path: str) -> str:
     """
     Detect the programming language of a file based on its extension.
@@ -254,15 +229,17 @@ def main():
     # if mr_url is a github url, then use the GitHub class
     if 'github.com' in mr_url:
         vcs = GitHub(mr_url)
+        token = os.environ.get('GITHUB_TOKEN')
     else:
         vcs = GitLab(mr_url)
+        token = os.environ.get('GITLAB_TOKEN')
     
     try:
         domain = vcs.domain()
         project_path = vcs.project_path()
         mr_iid = vcs.change_id()
         
-        vcs_client = vcs.client(domain, os.environ.get('GITLAB_TOKEN'))
+        vcs_client = vcs.client(domain, token)
 
         changed_files_resp = vcs.checkout_changes(vcs_client, project_path, mr_iid)
         changed_files = [change['new_path'] for change in changed_files_resp]
