@@ -9,6 +9,7 @@ from typing import List
 from pydantic import BaseModel, Field
 
 from vcs.gitlab import GitLab
+from vcs.github import GitHub
 
 ell.init(verbose=False)
 
@@ -250,7 +251,11 @@ def main():
 
     mr_url = sys.argv[1]
     
-    vcs = GitLab(mr_url)
+    # if mr_url is a github url, then use the GitHub class
+    if 'github.com' in mr_url:
+        vcs = GitHub(mr_url)
+    else:
+        vcs = GitLab(mr_url)
     
     try:
         domain = vcs.domain()
