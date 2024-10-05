@@ -5,6 +5,7 @@ from typing import List, Dict, Tuple
 import ell
 from typing import List
 from pydantic import BaseModel, Field
+from llms import code_reviewer, is_test_file
 from vcs.gitlab import GitLab
 from vcs.github import GitHub
 from rich.table import Table
@@ -17,7 +18,7 @@ class Comment(BaseModel):
     severity: str = Field(description="The severity of the comment. Must be one of MUST, SHOULD, or MAY.")
 
 class CodeReview(BaseModel):
-    code_review_score: int = Field(description="The code review score of the contents")
+    code_review_score: int = Field(description="The code review score of the contents. Must be between 0 and 10.")
     make_it_succint: Comment = Field(description="If there are ways to make the code more concise. If there is no way to make it more concise, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
     make_it_faster: Comment = Field(description="If there are ways to make the code faster. If there is no way to make it faster, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
     make_it_more_secure: Comment = Field(description="If there are ways to make the code more secure. If there is no way to make it more secure, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
@@ -114,78 +115,6 @@ def read_coding_standards(language: str, cache: Dict[str, str]) -> str:
         with open(filename, 'r') as file:
             cache[filename] = file.read()
     return cache[filename]
-
-@ell.complex(model="gpt-4o-2024-08-06", response_format=CodeReview, temperature=0.1)
-def code_reviewer(coding_standards: str, contents: str):
-    return [
-        ell.system(f"""
-A good code reviewer plays a crucial role in maintaining code quality, 
-sharing knowledge, and fostering a culture of continuous improvement 
-within a development team:
-
-# Technical Proficiency
-Deep understanding of the programming language(s) being used
-Familiarity with best practices and design patterns
-Knowledge of the project's architecture and coding standards
-
-# Attention to Detail
-Ability to spot potential bugs, edge cases, and performance issues
-Consistency in reviewing code thoroughly, not just skimming
-
-# Constructive Communication
-Provides clear, specific feedback
-Explains the reasoning behind suggestions
-Offers solutions or alternatives when pointing out issues
-
-# Objectivity
-Reviews code impartially, regardless of who wrote it
-Focuses on the code, not the coder
-
-# Mentorship Mindset
-Uses code reviews as an opportunity to educate and share knowledge
-Encourages good practices and helps team members grow
-
-# Big Picture Awareness
-Thinks about maintainability and scalability
-
-# Security Consciousness
-Identifies potential security vulnerabilities
-Ensures that security best practices are followed
-
-# Performance Consideration
-Evaluates code for efficiency and potential performance impacts
-Suggests optimizations where appropriate
-
-# Positive Attitude
-Acknowledges good work and clever solutions
-Maintains a collaborative and supportive tone in comments
-
-# Prioritization Skills
-Distinguishes between critical issues and minor suggestions
-Focuses on the most important aspects first
-
-# Respect for Different Approaches
-Recognizes that there can be multiple valid solutions to a problem
-Open to discussion about different approaches.
-
-{coding_standards}
-
-Given the contents, you need to return a structured review.
-    """
-),
-        ell.user(f"Analyze the following changes and provide feedback: {contents}.")
-    ]
-
-@ell.complex(model="gpt-4o-2024-08-06", response_format=TestFileReview)
-def is_test_file(language:str, contents: str):
-    """You are a movie review generator. Given the name of a movie, you need to return a structured review."""
-    return [
-        ell.system(f"""
-You are a software developer. You are given the name of a programming language and 
-the contents of a file. You need to determine if the file is a test file.
-"""),
-        ell.user(f"Analyze the following changes and provide feedback. Language: {language}, Contents: {contents}.")
-    ]
 
 # create a function that will accept a list of code review scores and return a single score
 def calculate_final_score(scores: List[int]) -> int:
