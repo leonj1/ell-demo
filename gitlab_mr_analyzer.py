@@ -284,7 +284,7 @@ def main():
                 else:
                     print(f"  - {file_path}")
         final_score = calculate_final_score(scores)
-        print(f"Final Score: {final_score}/100")
+        print(f"Final Score: {final_score}/10")
     except ValueError as e:
         print(f"Error: {e}")
         sys.exit(1)

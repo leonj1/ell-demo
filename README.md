@@ -71,5 +71,5 @@ Code:
     Make it more readable: The changes made improve readability by removing redundant code and focusing on relevant test cases. The new TestIsRunning function is well-structured and easy to follow. SHOULD
     Make it more testable: Ensure that the removal of TestIsPodReady does not lead to a gap in test coverage. Consider adding similar test cases to other relevant test functions if necessary. SHOULD
 Warning: Coding standards file for Unknown not found: tests/dockerfiles/counter-service/Dockerfile
-Final Score: 7.75/100
+Final Score: 7.75/10
 ```
