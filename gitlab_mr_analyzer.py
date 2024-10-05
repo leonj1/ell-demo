@@ -8,8 +8,7 @@ import ell
 from typing import List
 from pydantic import BaseModel, Field
 
-ell.init(verbose=True)
-
+ell.init(verbose=False)
 
 class CodeReview(BaseModel):
     code_review_score: int = Field(description="The code review score of the contents")
