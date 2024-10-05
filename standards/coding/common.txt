@@ -1,0 +1,16 @@
+1. Naming Conventions
+Descriptive Names: Use clear and meaningful names for variables, functions, and classes. For instance, instead of x for a variable, use customerAge. This improves readability and understanding of code functionality. 
+Avoid Ambiguities: Steer clear of using abbreviations or unclear terminology that might confuse the reader, opting instead for full words or phrases that describe the purpose.
+Pronounceable Names: Names should be easy to pronounce, making it easier to discuss and refer to code. Avoid cryptic command names.
+2. Principles of Clean Code
+KISS (Keep It Simple, Stupid): Aim for simplicity in your code. Complex solutions can lead to maintenance nightmares.
+DRY (Don't Repeat Yourself): Aim to reduce code duplication by abstracting common functionalities using functions, classes, or modules. This makes code more concise and easier to maintain. 
+Single Responsibility Principle: Each function or class should have one reason to change—essentially, every component should be focused on a single task.
+3. Code Structure and Style
+Consistency: Keep a consistent coding style throughout your codebase, which includes indentation, brace style, and spacing. This not only aids readability but also reduces the cognitive load for new contributors. 
+Avoid Globals: Globals can lead to unintended side effects and dependencies, making code harder to test and understand. Encapsulate data within classes or functions to restrict scope.
+4. Logical Flow and Dependencies
+Avoid Logical Dependencies: Methods should operate independently and not depend on the internal state of the same class or external factors. This makes testing and refactoring easier. 
+Reduce Negative Conditionals: Write conditions that are straightforward to understand; avoid using complex negative logic that can confuse readers.
+5. Abstraction and Implementation Hiding
+Abstract When Needed: Hide implementation details and expose only what is necessary. This creates a cleaner interface and keeps the codebase easier to manage. 

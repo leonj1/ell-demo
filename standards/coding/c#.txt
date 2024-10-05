@@ -1,0 +1,17 @@
+1. Data Types
+Use int Instead of Unsigned Types: It's recommended to use int for integer values as it provides better compatibility with many libraries and eases interaction across different parts of code. Learn more.
+2. Naming Conventions
+Class and Method Names: Always use PascalCase for naming classes and methods.
+Example: public class UserProfile { }
+Method Arguments and Local Variables: Use camelCase.
+Example: public void UpdateUser(int userId, string userName) { }
+Interface Naming: Prefix interface names with an 'I'.
+Example: public interface IUserService { }
+Avoid Underscores: Do not use underscores in identifiers to maintain clarity and consistency. 
+3. Whitespace and Formatting
+Indentation: Use 2 spaces for indentation instead of tabs, ensuring uniformity across your codebase.
+Statement Per Line: Limit to a maximum of one statement per line to enhance readability.
+Column Limit: Aim for a maximum line length of 100 characters to prevent horizontal scrolling and enhance readability.
+4. Code Quality Practices
+Exception Handling: Implement robust exception handling to manage runtime errors effectively.
+Boolean Short-Circuiting: Use && and || for boolean operations to optimize performance and readability. 
