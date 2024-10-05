@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-import math
+import gitlab
+from typing import List
 
 class VersionControl(ABC):
     @abstractmethod
@@ -20,4 +21,9 @@ class VersionControl(ABC):
     @abstractmethod
     def client(self, url: str, token: str):
         """Return the client for the version control system."""
+        pass
+    
+    @abstractmethod
+    def checkout_changes(self, vcs_client: gitlab.Gitlab, project_path: str, mr_iid: int) -> List[str]:
+        """Return the changes for the merge request or pull request."""
         pass

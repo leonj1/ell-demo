@@ -7,7 +7,8 @@ from urllib.parse import urlparse
 import ell
 from typing import List
 from pydantic import BaseModel, Field
-from gitlab import GitLab  # Add this import at the top of the file
+
+from vcs.gitlab import GitLab
 
 ell.init(verbose=False)
 
@@ -107,11 +108,10 @@ def categorize_file(file_path: str) -> Tuple[str, str]:
         language = detect_programming_language(file_path)
         return 'code', language
 
-def analyze_merge_request(gl: gitlab.Gitlab, project_path: str, mr_iid: int) -> Dict[str, List[Tuple[str, str]]]:
+def analyze_merge_request(changed_files: List[str]) -> Dict[str, List[Tuple[str, str]]]:
     """
     Analyze a merge request and categorize its files.
     """
-    changed_files = checkout_merge_request(gl, project_path, mr_iid)
     
     categorized_files = {
         'documentation': [],
@@ -261,8 +261,9 @@ def main():
         
         # Initialize GitLab client
         gl = vcs.client(gitlab_url, os.environ.get('GITLAB_TOKEN'))
-        
-        result = analyze_merge_request(gl, project_path, mr_iid)
+
+        changed_files = vcs.checkout_changes(gl, project_path, mr_iid)
+        result = analyze_merge_request(changed_files)
 
         # read the contents of standards/coding/common.txt 
         with open('standards/coding/common.txt', 'r') as file:
