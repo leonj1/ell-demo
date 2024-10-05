@@ -1,5 +1,12 @@
 import ell
 from typing import List
+from pydantic import BaseModel, Field
+
+class Proposal(BaseModel):
+    execution: str = Field(description="The execution plan of the proposal")
+    risks: str = Field(description="The risks of the proposal")
+    mitigation: str = Field(description="The mitigation plan of the proposal")
+    confidence_score: int = Field(description="The confidence score of the proposal")
 
 ell.init(verbose=True)
 
@@ -100,10 +107,25 @@ def business_strategy_plan(about : str):
         best_knowledge_management_specialist_draft,
         best_technical_mentor_coordinator_draft]}."
 
-story = business_strategy_plan("""
+@ell.complex(model="gpt-4o-2024-08-06", response_format=Proposal, temperature=0.1)
+def the_board(proposal: str):
+    """
+    You are a CTO of a large fortune 500 corporation.
+    You are interested in ensuring the staff are well trained, disciplined, efficient, effective, and produce output that is high quality which adheres to standards.
+    You are data driven and want to see how plans are executed and results are achieved.
+    Given the proposal, you need to return a structured review.
+    """
+    return f"Analyze the following proposal and provide feedback: {proposal}."
+
+proposal = business_strategy_plan("""
 Become the single place where developers go for training and design assistance in 2 years. 
 Create a seamless and supportive entry path for new hires that accelerates their time to productivity and job satisfaction.
 Have standards that increase the quality of developer and engineer output.
 """)
 
-print(story)
+review_message = the_board(proposal)
+review = review_message.parsed
+print(f"Confidence Score: {review.confidence_score}/100")
+print(f"Risks: {review.risks}")
+print(f"Mitigation: {review.mitigation}")
+print(f"Execution: {review.execution}")
