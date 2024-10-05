@@ -12,12 +12,12 @@ ell.init(verbose=False)
 
 class CodeReview(BaseModel):
     code_review_score: int = Field(description="The code review score of the contents")
-    make_it_succint: str = Field(description="If there are ways to make the code more concise")
-    make_it_faster: str = Field(description="If there are ways to make the code faster")
-    make_it_more_secure: str = Field(description="If there are ways to make the code more secure")
-    make_it_more_efficient: str = Field(description="If there are ways to make the code more efficient")
-    make_it_more_readable: str = Field(description="If there are ways to make the code more readable")
-    make_it_more_testable: str = Field(description="If there are ways to make the code more testable")
+    make_it_succint: str = Field(description="If there are ways to make the code more concise. If there is no way to make it more concise, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
+    make_it_faster: str = Field(description="If there are ways to make the code faster. If there is no way to make it faster, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
+    make_it_more_secure: str = Field(description="If there are ways to make the code more secure. If there is no way to make it more secure, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
+    make_it_more_efficient: str = Field(description="If there are ways to make the code more efficient. If there is no way to make it more efficient, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
+    make_it_more_readable: str = Field(description="If there are ways to make the code more readable. If there is no way to make it more readable, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
+    make_it_more_testable: str = Field(description="If there are ways to make the code more testable. If there is no way to make it more testable, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
 
 def parse_gitlab_mr_url(url: str) -> Tuple[str, int, int]:
     """
@@ -118,7 +118,7 @@ def analyze_merge_request(gl: gitlab.Gitlab, project_path: str, mr_iid: int) -> 
     
     return categorized_files
 
-# create a function that will read the contents of standards/coding/*.txt where the input is the language and that will be the filename. The function should accept a cache of coding standards and first check to see if its already in the cache. If not it will read the file and add it to the cache.
+# create a function that will read the contents of standards/coding/*.txt where the input is the language and that will be the filename. The function should accept a cache of coding standards and first check to see if its already in the cache.
 def read_coding_standards(language: str, cache: Dict[str, str]) -> str:
     """
     Read the contents of the coding standards file for a given programming language.
@@ -197,6 +197,31 @@ def calculate_final_score(scores: List[int]) -> int:
     """
     return sum(scores) / len(scores)
 
+def print_review_details(file_path: str, language: str, review: CodeReview):
+    """
+    Print the details of a code review for a specific file.
+
+    Args:
+    file_path (str): The path of the file being reviewed.
+    language (str): The programming language of the file.
+    review (CodeReview): The CodeReview object containing the review details.
+    """
+    print(f"  - {file_path} (Language: {language})")
+    print(f"    Code Review Score: {review.code_review_score}/10")
+    
+    if review.make_it_succint:
+        print(f"    Make it more concise: {review.make_it_succint}")
+    if review.make_it_faster:
+        print(f"    Make it faster: {review.make_it_faster}")
+    if review.make_it_more_secure:
+        print(f"    Make it more secure: {review.make_it_more_secure}")
+    if review.make_it_more_efficient:
+        print(f"    Make it more efficient: {review.make_it_more_efficient}")
+    if review.make_it_more_readable:
+        print(f"    Make it more readable: {review.make_it_more_readable}")
+    if review.make_it_more_testable:
+        print(f"    Make it more testable: {review.make_it_more_testable}")
+
 def main():
     if len(sys.argv) != 2:
         print("Usage: python gitlab_mr_analyzer.py <GitLab_MR_URL>")
@@ -213,9 +238,9 @@ def main():
         
         result = analyze_merge_request(gl, project_path, mr_iid)
 
-        # read the contents of standards/coding/c#.txt        
-        with open('standards/coding/c#.txt', 'r') as file:
-            coding_standards = file.read()
+        # read the contents of standards/coding/common.txt 
+        with open('standards/coding/common.txt', 'r') as file:
+            common_coding_standards = file.read()
             
         # create a variable that will be a cache of coding standards by programming language
         coding_standards_by_language = {}
@@ -231,7 +256,7 @@ def main():
                     if not os.path.exists(f'standards/coding/{language.lower()}.txt'):
                         print(f"Warning: Coding standards file for {language} not found: {file_path}")
                         continue
-                    coding_standards = read_coding_standards(language, coding_standards_by_language)
+
                     # fetch the changes for file_path from the merge request in gitlab
                     mr = gl.projects.get(project_path).mergerequests.get(mr_iid)
                     changes = mr.changes()['changes']
@@ -242,21 +267,21 @@ def main():
                     else:
                         print(f"Error: File {file_path} not found in merge request changes.")
                         continue
+
+                    review_from_common_message = code_reviewer(common_coding_standards, contents)
+                    review_from_common = review_from_common_message.parsed
+                    scores.append(review_from_common.code_review_score)
+                    print_review_details(file_path, language, review_from_common)
+                    
+                    coding_standards = read_coding_standards(language, coding_standards_by_language)
                     review_message = code_reviewer(coding_standards, contents)
                     review = review_message.parsed
-                    # add the score to the scores list
-                    scores.append(review.code_review_score)
-                    print(f"  - {file_path} (Language: {language})")
-                    print(f"    Code Review Score: {review.code_review_score}/10")
-                    print(f"    Make it more concise: {review.make_it_succint}")
-                    print(f"    Make it faster: {review.make_it_faster}")
-                    print(f"    Make it more secure: {review.make_it_more_secure}")
-                    print(f"    Make it more efficient: {review.make_it_more_efficient}")
-                    print(f"    Make it more readable: {review.make_it_more_readable}")
-                    print(f"    Make it more testable: {review.make_it_more_testable}")
+                    scores.append(review_from_common.code_review_score)
+                    print_review_details(file_path, language, review)
                 else:
                     print(f"  - {file_path}")
-    
+        final_score = calculate_final_score(scores)
+        print(f"Final Score: {final_score}/100")
     except ValueError as e:
         print(f"Error: {e}")
         sys.exit(1)
