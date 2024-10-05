@@ -12,14 +12,18 @@ from rich.console import Console
 
 ell.init(verbose=False)
 
+class Comment(BaseModel):
+    comment: str = Field(description="The comment to be added to the code review. If there is no comment, return an empty string.")
+    severity: str = Field(description="The severity of the comment. Must be one of MUST, SHOULD, or MAY.")
+
 class CodeReview(BaseModel):
     code_review_score: int = Field(description="The code review score of the contents")
-    make_it_succint: str = Field(description="If there are ways to make the code more concise. If there is no way to make it more concise, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
-    make_it_faster: str = Field(description="If there are ways to make the code faster. If there is no way to make it faster, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
-    make_it_more_secure: str = Field(description="If there are ways to make the code more secure. If there is no way to make it more secure, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
-    make_it_more_efficient: str = Field(description="If there are ways to make the code more efficient. If there is no way to make it more efficient, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
-    make_it_more_readable: str = Field(description="If there are ways to make the code more readable. If there is no way to make it more readable, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
-    make_it_more_testable: str = Field(description="If there are ways to make the code more testable. If there is no way to make it more testable, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
+    make_it_succint: Comment = Field(description="If there are ways to make the code more concise. If there is no way to make it more concise, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
+    make_it_faster: Comment = Field(description="If there are ways to make the code faster. If there is no way to make it faster, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
+    make_it_more_secure: Comment = Field(description="If there are ways to make the code more secure. If there is no way to make it more secure, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
+    make_it_more_efficient: Comment = Field(description="If there are ways to make the code more efficient. If there is no way to make it more efficient, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
+    make_it_more_readable: Comment = Field(description="If there are ways to make the code more readable. If there is no way to make it more readable, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
+    make_it_more_testable: Comment = Field(description="If there are ways to make the code more testable. If there is no way to make it more testable, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
 
 class TestFileReview(BaseModel):
     is_test_file: bool = Field(description="Whether the file is a test file")
@@ -210,26 +214,27 @@ def print_review_details(file_path: str, language: str, review: CodeReview):
     console = Console()
     my_table = Table(title=table_header)
     my_table.add_column("Category", justify="left", style="cyan", no_wrap=True)
+    my_table.add_column("Severity", justify="left", style="red", no_wrap=True)
     my_table.add_column("Recommendation", style="green", no_wrap=False)
     
     if review.make_it_succint:
         has_code_review = True
-        my_table.add_row("Make it concise", review.make_it_succint)
+        my_table.add_row("Make it concise", review.make_it_succint.severity, review.make_it_succint.comment)
     if review.make_it_faster:
         has_code_review = True
-        my_table.add_row("Make it faster", review.make_it_faster)
+        my_table.add_row("Make it faster", review.make_it_faster.severity, review.make_it_faster.comment)
     if review.make_it_more_secure:
         has_code_review = True
-        my_table.add_row("Make it more secure", review.make_it_more_secure)
+        my_table.add_row("Make it more secure", review.make_it_more_secure.severity, review.make_it_more_secure.comment)
     if review.make_it_more_efficient:
         has_code_review = True
-        my_table.add_row("Make it more efficient", review.make_it_more_efficient)
+        my_table.add_row("Make it more efficient", review.make_it_more_efficient.severity, review.make_it_more_efficient.comment)
     if review.make_it_more_readable:
         has_code_review = True
-        my_table.add_row("Make it more readable", review.make_it_more_readable)
+        my_table.add_row("Make it more readable", review.make_it_more_readable.severity, review.make_it_more_readable.comment)
     if review.make_it_more_testable:
         has_code_review = True
-        my_table.add_row("Make it more testable", review.make_it_more_testable)
+        my_table.add_row("Make it more testable", review.make_it_more_testable.severity, review.make_it_more_testable.comment)
         
     if has_code_review:
         console.print(my_table)
