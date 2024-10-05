@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 import ell
 from typing import List
 from pydantic import BaseModel, Field
+from gitlab import GitLab  # Add this import at the top of the file
 
 ell.init(verbose=False)
 
@@ -249,12 +250,17 @@ def main():
 
     mr_url = sys.argv[1]
     
+    vcs = GitLab(mr_url)
+    
     try:
-        gitlab_domain, project_path, mr_iid = parse_gitlab_mr_url(mr_url)
+        gitlab_domain = vcs.domain()
+        project_path = vcs.project_path()
+        mr_iid = vcs.change_id()
+
         gitlab_url = f"https://{gitlab_domain}"
         
         # Initialize GitLab client
-        gl = gitlab.Gitlab(gitlab_url, private_token=os.environ.get('GITLAB_TOKEN'))
+        gl = vcs.client(gitlab_url, os.environ.get('GITLAB_TOKEN'))
         
         result = analyze_merge_request(gl, project_path, mr_iid)
 

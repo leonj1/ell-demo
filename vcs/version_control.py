@@ -17,3 +17,7 @@ class VersionControl(ABC):
         """Return the merge request or pull request id for the version control system."""
         pass
     
+    @abstractmethod
+    def client(self, url: str, token: str):
+        """Return the client for the version control system."""
+        pass
