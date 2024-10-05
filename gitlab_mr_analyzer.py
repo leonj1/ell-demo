@@ -253,16 +253,14 @@ def main():
     vcs = GitLab(mr_url)
     
     try:
-        gitlab_domain = vcs.domain()
+        domain = vcs.domain()
         project_path = vcs.project_path()
         mr_iid = vcs.change_id()
-
-        gitlab_url = f"https://{gitlab_domain}"
         
-        # Initialize GitLab client
-        vcs_client = vcs.client(gitlab_url, os.environ.get('GITLAB_TOKEN'))
+        vcs_client = vcs.client(domain, os.environ.get('GITLAB_TOKEN'))
 
-        changed_files = vcs.checkout_changes(vcs_client, project_path, mr_iid)
+        changed_files_resp = vcs.checkout_changes(vcs_client, project_path, mr_iid)
+        changed_files = [change['new_path'] for change in changed_files_resp]
         result = analyze_merge_request(changed_files)
 
         # read the contents of standards/coding/common.txt 
@@ -285,9 +283,7 @@ def main():
                         print(f"Warning: Coding standards file for {language} not found: {file_path}")
                         continue
 
-                    # fetch the changes for file_path from the merge request in gitlab
-                    mr =vcs_client.projects.get(project_path).mergerequests.get(mr_iid)
-                    changes = mr.changes()['changes']
+                    changes = vcs.checkout_changes(vcs_client, project_path, mr_iid)
                     for change in changes:
                         if change['new_path'] == file_path:
                             contents = change['diff']
@@ -295,7 +291,6 @@ def main():
                     else:
                         print(f"Error: File {file_path} not found in merge request changes.")
                         continue
-
 
                     review_message = is_test_file(language, contents)
                     review = review_message.parsed
