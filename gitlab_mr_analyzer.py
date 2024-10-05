@@ -260,9 +260,9 @@ def main():
         gitlab_url = f"https://{gitlab_domain}"
         
         # Initialize GitLab client
-        gl = vcs.client(gitlab_url, os.environ.get('GITLAB_TOKEN'))
+        vcs_client = vcs.client(gitlab_url, os.environ.get('GITLAB_TOKEN'))
 
-        changed_files = vcs.checkout_changes(gl, project_path, mr_iid)
+        changed_files = vcs.checkout_changes(vcs_client, project_path, mr_iid)
         result = analyze_merge_request(changed_files)
 
         # read the contents of standards/coding/common.txt 
@@ -286,7 +286,7 @@ def main():
                         continue
 
                     # fetch the changes for file_path from the merge request in gitlab
-                    mr = gl.projects.get(project_path).mergerequests.get(mr_iid)
+                    mr =vcs_client.projects.get(project_path).mergerequests.get(mr_iid)
                     changes = mr.changes()['changes']
                     for change in changes:
                         if change['new_path'] == file_path:
