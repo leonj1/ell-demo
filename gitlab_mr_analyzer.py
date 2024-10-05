@@ -1,15 +1,14 @@
 import os
-import re
 import sys
 import gitlab
 from typing import List, Dict, Tuple
-from urllib.parse import urlparse
 import ell
 from typing import List
 from pydantic import BaseModel, Field
-
 from vcs.gitlab import GitLab
 from vcs.github import GitHub
+from rich.table import Table
+from rich.console import Console
 
 ell.init(verbose=False)
 
@@ -205,19 +204,35 @@ def print_review_details(file_path: str, language: str, review: CodeReview):
     """
     print(f"  - {file_path} (Language: {language})")
     print(f"    Code Review Score: {review.code_review_score}/10")
+    table_header = f"Score: {review.code_review_score}/10: {file_path}"
+
+    has_code_review = False
+    console = Console()
+    my_table = Table(title=table_header)
+    my_table.add_column("Category", justify="left", style="cyan", no_wrap=True)
+    my_table.add_column("Recommendation", style="green", no_wrap=False)
     
     if review.make_it_succint:
-        print(f"    Make it more concise: {review.make_it_succint}")
+        has_code_review = True
+        my_table.add_row("Make it concise", review.make_it_succint)
     if review.make_it_faster:
-        print(f"    Make it faster: {review.make_it_faster}")
+        has_code_review = True
+        my_table.add_row("Make it faster", review.make_it_faster)
     if review.make_it_more_secure:
-        print(f"    Make it more secure: {review.make_it_more_secure}")
+        has_code_review = True
+        my_table.add_row("Make it more secure", review.make_it_more_secure)
     if review.make_it_more_efficient:
-        print(f"    Make it more efficient: {review.make_it_more_efficient}")
+        has_code_review = True
+        my_table.add_row("Make it more efficient", review.make_it_more_efficient)
     if review.make_it_more_readable:
-        print(f"    Make it more readable: {review.make_it_more_readable}")
+        has_code_review = True
+        my_table.add_row("Make it more readable", review.make_it_more_readable)
     if review.make_it_more_testable:
-        print(f"    Make it more testable: {review.make_it_more_testable}")
+        has_code_review = True
+        my_table.add_row("Make it more testable", review.make_it_more_testable)
+        
+    if has_code_review:
+        console.print(my_table)
 
 def main():
     if len(sys.argv) != 2:
