@@ -262,16 +262,17 @@ def main():
         with open('standards/coding/common.txt', 'r') as file:
             common_coding_standards = file.read()
             
-        # create a variable that will be a cache of coding standards by programming language
         coding_standards_by_language = {}
-        # create a list that will store the scores
         scores = []
+        has_code_changes = False
+        has_tests = False
 
         print(f"Merge Request Analysis for {mr_url}:")
         for category, files in result.items():
             print(f"\n{category.capitalize()}:")
             for file_path, language in files:
                 if category == 'code':
+                    has_code_changes = True
                     # check to see if the coding standards file exists in standards/coding/
                     if not os.path.exists(f'standards/coding/{language.lower()}.txt'):
                         print(f"Warning: Coding standards file for {language} not found: {file_path}")
@@ -292,6 +293,7 @@ def main():
                     review_message = is_test_file(language, contents)
                     review = review_message.parsed
                     if review.is_test_file:
+                        has_tests = True
                         if review.are_there_missing_test_scenarios:
                             print(f"  - {file_path} (Language: {language})")
                             print(f"    Code review score: {review.review_score}/10")
@@ -304,6 +306,10 @@ def main():
                     print_review_details(file_path, language, review)
                 else:
                     print(f"  - {file_path}")
+
+        if has_code_changes and not has_tests:
+            print("CRITICAL: No test files detected.")
+
         final_score = calculate_final_score(scores)
         print(f"Final Score: {final_score}/10")
     except ValueError as e:
