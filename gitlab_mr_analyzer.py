@@ -4,32 +4,14 @@ import gitlab
 from typing import List, Dict, Tuple
 import ell
 from typing import List
-from pydantic import BaseModel, Field
 from llms import code_reviewer, is_test_file
+from models.code_review import CodeReview
 from vcs.gitlab import GitLab
 from vcs.github import GitHub
 from rich.table import Table
 from rich.console import Console
 
 ell.init(verbose=False)
-
-class Comment(BaseModel):
-    comment: str = Field(description="The comment to be added to the code review. If there is no comment, return an empty string.")
-    severity: str = Field(description="The severity of the comment. Must be one of MUST, SHOULD, or MAY.")
-
-class CodeReview(BaseModel):
-    code_review_score: int = Field(description="The code review score of the contents. Must be between 0 and 10.")
-    make_it_succint: Comment = Field(description="If there are ways to make the code more concise. If there is no way to make it more concise, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
-    make_it_faster: Comment = Field(description="If there are ways to make the code faster. If there is no way to make it faster, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
-    make_it_more_secure: Comment = Field(description="If there are ways to make the code more secure. If there is no way to make it more secure, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
-    make_it_more_efficient: Comment = Field(description="If there are ways to make the code more efficient. If there is no way to make it more efficient, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
-    make_it_more_readable: Comment = Field(description="If there are ways to make the code more readable. If there is no way to make it more readable, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
-    make_it_more_testable: Comment = Field(description="If there are ways to make the code more testable. If there is no way to make it more testable, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
-
-class TestFileReview(BaseModel):
-    is_test_file: bool = Field(description="Whether the file is a test file")
-    review_score: int = Field(description="The test file review score of the contents")
-    are_there_missing_test_scenarios: str = Field(description="List any missing test scenarios. If there are no missing test scenarios, return an empty string. If there is a recommendation end with either MUST, SHOULD, or MAY.")
 
 def detect_programming_language(file_path: str) -> str:
     """
@@ -228,9 +210,13 @@ def main():
                     if review.is_test_file:
                         has_tests = True
                         if review.are_there_missing_test_scenarios:
-                            print(f"  - {file_path} (Language: {language})")
-                            print(f"    Code review score: {review.review_score}/10")
-                            print(f"    Missing test scenarios: {review.are_there_missing_test_scenarios}")
+                            table_header = f"Test File Review for {file_path} (Language: {language})"
+                            console = Console()
+                            my_table = Table(title=table_header)
+                            my_table.add_column("Score", justify="left", style="red", no_wrap=True)
+                            my_table.add_column("Recommendation", style="green", no_wrap=False)
+                            my_table.add_row("Review of Test", review.are_there_missing_test_scenarios)                            
+                            console.print(my_table)
 
                     coding_standards = common_coding_standards + read_coding_standards(language, coding_standards_by_language)
                     review_message = code_reviewer(coding_standards, contents)
