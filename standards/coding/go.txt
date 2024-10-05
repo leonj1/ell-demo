@@ -1,0 +1,91 @@
+Follow Go's official style guide:
+
+Use the gofmt tool to automatically format code
+Follow the guidelines in Effective Go and the Go Code Review Comments
+
+
+Use meaningful variable and function names:
+
+Choose descriptive names that convey purpose
+Use camelCase for variable and function names
+Use PascalCase for exported names (visible outside the package)
+
+
+Keep functions small and focused:
+
+Aim for functions that do one thing well
+Consider breaking large functions into smaller, more manageable pieces
+Typically, try to keep functions under 50 lines of code
+
+
+Minimize package-level variables:
+
+Prefer passing dependencies as function parameters
+Use package-level variables sparingly to reduce global state
+
+
+Properly handle errors:
+
+Don't ignore errors; always check returned error values
+Avoid using panic() for normal error handling
+Consider wrapping errors with additional context
+
+
+Use consistent naming conventions:
+
+Use short names for short-lived variables (e.g., i for loop iterators)
+Use longer, more descriptive names for package-level declarations
+Avoid redundant names like userID in user.UserID
+
+
+Write clear and concise comments:
+
+Write comments for exported functions, types, and packages
+Focus on explaining "why" rather than "what" the code does
+Use // for line comments and /* */ for package comments
+
+
+Optimize for readability:
+
+Prefer clarity over cleverness
+Use named return values when it improves readability
+Group related declarations together
+
+
+Use interfaces appropriately:
+
+Define interfaces in the package that uses them, not the one that implements them
+Keep interfaces small and focused
+
+
+Manage dependencies:
+
+Use go mod for dependency management
+Avoid circular dependencies between packages
+
+
+Write tests:
+
+Aim for good test coverage, especially for complex logic
+Use table-driven tests where appropriate
+Use meaningful test function names (e.g., TestValidInput_ReturnsTrue)
+
+
+Consider performance:
+
+Use benchmarks to identify performance bottlenecks
+Consider using sync.Pool for frequently allocated objects
+Be mindful of memory allocations, especially in high-performance code
+
+
+Handle concurrency carefully:
+
+Use goroutines and channels appropriately
+Be wary of race conditions and use the race detector
+Consider using sync.Mutex or sync.RWMutex for protecting shared resources
+
+
+Follow the principle of least privilege:
+
+Only export (capitalize) identifiers that need to be public
+Use internal packages for shared code that shouldn't be exposed outside the project

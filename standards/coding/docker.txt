@@ -1,0 +1,116 @@
+Minimize layers:
+
+Combine RUN commands using && and \ for line continuation
+Use multi-stage builds to reduce final image size
+
+
+Order instructions from least to most frequently changing:
+
+Put instructions that change less often at the top of the Dockerfile
+This optimizes caching and speeds up builds
+
+
+Use .dockerignore file:
+
+Exclude unnecessary files from the build context
+Improves build performance and reduces image size
+
+
+Set the WORKDIR:
+
+Use WORKDIR instead of RUN cd ...
+Prefer absolute paths for WORKDIR
+
+
+Use environment variables:
+
+Define common values as ENV variables
+Use ARG for build-time variables
+
+
+Don't run processes as root:
+
+Create a non-root user and use USER instruction to switch to it
+Example:
+dockerfileCopyRUN adduser -D myuser
+USER myuser
+
+
+
+Use COPY instead of ADD:
+
+COPY is more transparent
+Use ADD only for auto-extracting archives
+
+
+Use exec form of CMD and ENTRYPOINT:
+
+Use CMD ["executable", "param1", "param2"] instead of CMD executable param1 param2
+This ensures proper signal handling
+
+
+Include HEALTHCHECK instruction:
+
+Helps Docker determine if the container is functioning properly
+Example:
+dockerfileCopyHEALTHCHECK CMD curl -f http://localhost/ || exit 1
+
+
+
+Use appropriate logging:
+
+Configure your application to log to stdout/stderr
+This allows Docker to handle log management
+
+
+Clean up in the same layer:
+
+If you need to run commands that create temporary files, remove them in the same RUN instruction
+Example:
+dockerfileCopyRUN apt-get update && apt-get install -y \
+    package1 \
+    package2 \
+    && rm -rf /var/lib/apt/lists/*
+
+
+
+Use multi-stage builds for compiled languages:
+
+Build in one stage, copy the binary to a smaller runtime image
+Reduces final image size significantly
+
+
+Label your images:
+
+Use LABEL to add metadata to your image
+Include information like maintainer, version, description
+
+
+Keep application data separate:
+
+Use volumes for persistent data
+Don't store data in the container itself
+
+
+Specify default configurations:
+
+Set sensible defaults for your application
+Allow overriding through environment variables
+
+
+Pin package versions:
+
+When installing packages, specify exact versions
+Ensures reproducibility across builds
+
+
+Use appropriate instructions for adding files:
+
+Use COPY for adding local files to your image
+Use ADD for URLs and tar extraction
+
+
+Document exposed ports:
+
+Use the EXPOSE instruction to document which ports your application uses
+This doesn't actually publish the ports, but serves as documentation

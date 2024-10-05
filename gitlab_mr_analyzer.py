@@ -77,6 +77,8 @@ def detect_programming_language(file_path: str) -> str:
         '.tfstate': 'Terraform',
         '.tfstate.backup': 'Terraform',
         '.tfvars': 'Terraform',
+        '.dockerfile': 'Docker',
+        'Dockerfile': 'Docker',
     }
     
     _, ext = os.path.splitext(file_path)
