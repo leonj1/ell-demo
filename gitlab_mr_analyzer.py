@@ -270,13 +270,8 @@ def main():
                         print(f"Error: File {file_path} not found in merge request changes.")
                         continue
 
-                    # commenting out since Im getting duplicate reviews with common and lang specific standards
-                    # review_from_common_message = code_reviewer(common_coding_standards, contents)
-                    # review_from_common = review_from_common_message.parsed
-                    # scores.append(review_from_common.code_review_score)
-                    # print_review_details(file_path, language, review_from_common)
-                    
-                    coding_standards = read_coding_standards(language, coding_standards_by_language)
+                    # concatenate common coding standards with language specific coding standards
+                    coding_standards = common_coding_standards + read_coding_standards(language, coding_standards_by_language)
                     review_message = code_reviewer(coding_standards, contents)
                     review = review_message.parsed
                     scores.append(review.code_review_score)
