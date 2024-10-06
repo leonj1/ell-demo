@@ -1,15 +1,17 @@
 import os
 import sys
 import gitlab
-from typing import List, Dict, Tuple
 import ell
+from typing import List, Dict, Tuple
 from typing import List
 from llms import code_reviewer, is_test_file
 from models.code_review import CodeReview
+from models.summary import Summary
 from vcs.gitlab import GitLab
 from vcs.github import GitHub
 from rich.table import Table
 from rich.console import Console
+from rich import box
 
 ell.init(verbose=False)
 
@@ -108,7 +110,8 @@ def calculate_final_score(scores: List[int]) -> int:
         return 10
     return sum(scores) / len(scores)
 
-def print_review_details(file_path: str, language: str, review: CodeReview):
+# return a list of summaries
+def print_review_details(file_path: str, language: str, review: CodeReview) -> List[Summary]:
     """
     Print the details of a code review for a specific file.
 
@@ -126,29 +129,45 @@ def print_review_details(file_path: str, language: str, review: CodeReview):
     my_table = Table(title=table_header)
     my_table.add_column("Category", justify="left", style="cyan", no_wrap=True)
     my_table.add_column("Severity", justify="left", style="red", no_wrap=True)
-    my_table.add_column("Recommendation", style="green", no_wrap=False)
-    
+    my_table.add_column("Recommendation", style="green", no_wrap=False)        
+
+    summaries: List[Summary] = []
+
     if review.make_it_succint:
         has_code_review = True
         my_table.add_row("Make it concise", review.make_it_succint.severity, review.make_it_succint.comment)
+        if review.make_it_succint.severity == "MUST":
+            summaries.append(Summary(category="Code Review", severity="MUST", recommendation=review.make_it_succint.comment, file_name=file_path))
     if review.make_it_faster:
         has_code_review = True
         my_table.add_row("Make it faster", review.make_it_faster.severity, review.make_it_faster.comment)
+        if review.make_it_faster.severity == "MUST":
+            summaries.append(Summary(category="Code Review", severity="MUST", recommendation=review.make_it_faster.comment, file_name=file_path))
     if review.make_it_more_secure:
         has_code_review = True
         my_table.add_row("Make it more secure", review.make_it_more_secure.severity, review.make_it_more_secure.comment)
+        if review.make_it_more_secure.severity == "MUST":
+            summaries.append(Summary(category="Code Review", severity="MUST", recommendation=review.make_it_more_secure.comment, file_name=file_path))
     if review.make_it_more_efficient:
         has_code_review = True
         my_table.add_row("Make it more efficient", review.make_it_more_efficient.severity, review.make_it_more_efficient.comment)
+        if review.make_it_more_efficient.severity == "MUST":
+            summaries.append(Summary(category="Code Review", severity="MUST", recommendation=review.make_it_more_efficient.comment, file_name=file_path))
     if review.make_it_more_readable:
         has_code_review = True
         my_table.add_row("Make it more readable", review.make_it_more_readable.severity, review.make_it_more_readable.comment)
+        if review.make_it_more_readable.severity == "MUST":
+            summaries.append(Summary(category="Code Review", severity="MUST", recommendation=review.make_it_more_readable.comment, file_name=file_path))
     if review.make_it_more_testable:
         has_code_review = True
         my_table.add_row("Make it more testable", review.make_it_more_testable.severity, review.make_it_more_testable.comment)
-        
+        if review.make_it_more_testable.severity == "MUST":
+            summaries.append(Summary(category="Code Review", severity="MUST", recommendation=review.make_it_more_testable.comment, file_name=file_path))
+
     if has_code_review:
         console.print(my_table)
+
+    return summaries
 
 def main():
     if len(sys.argv) != 2:
@@ -165,6 +184,9 @@ def main():
         vcs = GitLab(mr_url)
         token = os.environ.get('GITLAB_TOKEN')
     
+    # a collection of summaries of type Summary     
+    summaries: List[Summary] = []
+
     try:
         domain = vcs.domain()
         project_path = vcs.project_path()
@@ -209,20 +231,23 @@ def main():
                     review = review_message.parsed
                     if review.is_test_file:
                         has_tests = True
-                        if review.are_there_missing_test_scenarios:
+                        if review.are_there_missing_test_scenarios.comment != "":
                             table_header = f"Test File Review for {file_path} (Language: {language})"
                             console = Console()
                             my_table = Table(title=table_header)
-                            my_table.add_column("Score", justify="left", style="red", no_wrap=True)
+                            my_table.add_column("Category", justify="left", style="red", no_wrap=True)
+                            my_table.add_column("Severity", justify="center", style="red", no_wrap=True)
                             my_table.add_column("Recommendation", style="green", no_wrap=False)
-                            my_table.add_row("Review of Test", review.are_there_missing_test_scenarios)                            
+                            my_table.add_row("Review of Test", review.are_there_missing_test_scenarios.severity, review.are_there_missing_test_scenarios.comment)
                             console.print(my_table)
+                            if review.are_there_missing_test_scenarios.severity == "MUST":
+                                summaries.append(Summary(category="Test", severity="MUST", recommendation=review.are_there_missing_test_scenarios.comment, file_name=file_path))
 
                     coding_standards = common_coding_standards + read_coding_standards(language, coding_standards_by_language)
                     review_message = code_reviewer(coding_standards, contents)
                     review = review_message.parsed
                     scores.append(review.code_review_score)
-                    print_review_details(file_path, language, review)
+                    summaries.extend(print_review_details(file_path, language, review))
                 else:
                     print(f"  - {file_path}")
 
@@ -231,6 +256,17 @@ def main():
 
         final_score = calculate_final_score(scores)
         print(f"Final Score: {final_score}/10")
+        if len(summaries) > 0:
+            console = Console()
+            my_table = Table(title="Summary of MUST Findings", show_lines=True, box=box.MINIMAL_DOUBLE_HEAD)
+            my_table.add_column("Category", justify="left", style="red", no_wrap=True)
+            my_table.add_column("Severity", justify="center", style="red", no_wrap=True)
+            my_table.add_column("File", style="white", no_wrap=False)
+            my_table.add_column("Recommendation", style="green", no_wrap=False)
+            for summary in summaries:
+                my_table.add_row(summary.category, summary.severity, summary.file_name, summary.recommendation)
+            console.print(my_table)
+
     except ValueError as e:
         print(f"Error: {e}")
         sys.exit(1)
