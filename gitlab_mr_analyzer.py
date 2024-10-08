@@ -169,7 +169,7 @@ def print_review_details(file_path: str, language: str, review: CodeReview) -> L
 
     return summaries
 
-def main():
+def main() -> None:
     if len(sys.argv) != 2:
         print("Usage: python gitlab_mr_analyzer.py <GitLab_MR_URL>")
         sys.exit(1)
@@ -275,6 +275,15 @@ def main():
         sys.exit(1)
     except gitlab.exceptions.GitlabGetError:
         print("Error: Failed to retrieve merge request. Make sure the URL is correct and you have access to the project.")
+        sys.exit(1)
+    except FileNotFoundError as e:
+        print(f"Error: File not found - {e}")
+        sys.exit(1)
+    except PermissionError as e:
+        print(f"Error: Permission denied - {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
